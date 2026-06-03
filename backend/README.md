@@ -1,140 +1,161 @@
 # Habit Flow Backend
 
-Habit Flow is a responsive web habit tracker focused on weekly consistency instead of pressure-heavy daily streaks. This backend provides the API for authentication, habit management, habit logs, daily check-ins, weekly summaries, and short Gemini-powered weekly insights.
+Backend API service for Habit Flow, a weekly habit tracking application with authentication, habit management, activity logging, daily check-ins, weekly summaries, and AI-assisted habit insights.
 
-The project is intentionally practical: clean enough for real deployment, but still understandable for a university project.
+The backend is responsible for authentication, request validation, data ownership, persistence, weekly progress calculation, and Gemini AI integration. The frontend communicates with this service through REST API endpoints.
 
-## Stack
+## Tech Stack
 
-- Node.js and Express
-- PostgreSQL with Prisma ORM
-- JWT authentication
-- bcrypt password hashing
-- Gemini API integration
-- node-cron scheduler
-- Helmet security headers
-- Express rate limiting
-- Node's built-in test runner
+* Node.js
+* Express.js
+* Prisma ORM
+* PostgreSQL
+* JWT authentication
+* bcrypt password hashing
+* Gemini AI API
+* Helmet
+* Express rate limiting
+* Node.js test runner
 
 ## Project Structure
 
 ```text
 backend/
-|-- prisma/
-|   |-- migrations/
-|   `-- schema.prisma
-|-- src/
-|   |-- app.js
-|   |-- server.js
-|   |-- config/
-|   |-- controllers/
-|   |-- jobs/
-|   |-- middleware/
-|   |-- models/
-|   |-- routes/
-|   |-- schemas/
-|   |-- services/
-|   |-- tests/
-|   `-- utils/
-|-- .env.example
-|-- package.json
-`-- README.md
+├── prisma/
+│   ├── migrations/
+│   └── schema.prisma
+├── src/
+│   ├── app.js
+│   ├── server.js
+│   ├── config/
+│   ├── controllers/
+│   ├── jobs/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── schemas/
+│   ├── services/
+│   ├── tests/
+│   └── utils/
+├── .env.example
+├── package.json
+└── README.md
 ```
 
 ## Architecture
 
-- `routes/` defines the `/api/...` endpoint layout.
-- `controllers/` handle request and response flow.
-- `services/` contain business logic and Prisma access.
-- `schemas/` contain lightweight request validation.
-- `middleware/` handles auth, CORS, validation, and errors.
-- `jobs/` contains scheduler entry points such as daily recap checks.
-- `utils/` contains shared date, token, scoring, and response helpers.
+The backend follows a layered structure:
 
-The API uses user-scoped data access throughout protected routes so users can only access their own habits, logs, check-ins, and summaries.
+* `routes/` defines the API endpoints.
+* `controllers/` handle request and response flow.
+* `services/` contain business logic and database operations.
+* `models/` wrap Prisma access patterns.
+* `schemas/` validate incoming request payloads.
+* `middleware/` handles authentication, validation, CORS, rate limiting, and errors.
+* `utils/` contains shared helpers for dates, tokens, scoring, and responses.
+* `jobs/` contains scheduled background job entry points.
 
-## Security
+Protected routes use authenticated user context, and service-level ownership checks ensure users can only access their own data.
 
-Practical security measures included for the MVP:
+## Core Capabilities
 
-- `app.disable("x-powered-by")` hides the Express fingerprint.
-- Helmet adds common HTTP security headers.
-- CORS is configured through `CORS_ALLOWED_ORIGINS` and allows localhost frontend origins during development.
-- General API, auth, and AI routes have configurable rate limits.
-- JWT auth protects user-specific routes.
-- Logout invalidates existing tokens through `tokenVersion`.
-- Services enforce user ownership before reading or changing records.
-- Request schemas validate auth, habits, logs, check-ins, dates, enums, and numeric fields.
-- Error responses stay JSON-formatted and production mode hides internal server details.
+* User registration, login, logout, and current-user retrieval
+* JWT-based protected routes
+* Habit creation, update, listing, and deletion
+* Good habit support for checklist, frequency, and duration goals
+* Bad habit tracking through avoidance logs
+* Habit log filtering by habit, date, and date range
+* Daily check-ins with mood, energy, and notes
+* Weekly summary generation based on habit logs and check-ins
+* Gemini-generated weekly insight and recommendation text
+* Backend fallback insight when Gemini is unavailable
+* Scheduled daily recap check job
 
-## Setup
+## Environment Configuration
 
-```bash
-npm install
-cp .env.example .env
-npm run prisma:generate
-npm run prisma:migrate
-npm run dev
-```
-
-On Windows PowerShell:
+Create a local environment file from the provided template:
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+Required and commonly used variables:
+
+| Variable                       | Description                                                          |
+| ------------------------------ | -------------------------------------------------------------------- |
+| `NODE_ENV`                     | Runtime environment, such as `development`, `test`, or `production`. |
+| `PORT`                         | API server port. Defaults to `5000`.                                 |
+| `API_PREFIX`                   | API route prefix. Defaults to `/api`.                                |
+| `APP_TIME_ZONE`                | Timezone used for date boundaries. Defaults to `Asia/Jakarta`.       |
+| `DATABASE_URL`                 | PostgreSQL connection string.                                        |
+| `JWT_SECRET`                   | Secret used to sign JWT access tokens.                               |
+| `JWT_EXPIRES_IN`               | Token lifetime, such as `7d`.                                        |
+| `BCRYPT_SALT_ROUNDS`           | Password hashing cost.                                               |
+| `CORS_ALLOWED_ORIGINS`         | Comma-separated list of allowed frontend origins.                    |
+| `GENERAL_RATE_LIMIT_WINDOW_MS` | General API rate limit window.                                       |
+| `GENERAL_RATE_LIMIT_MAX`       | General API request limit per window.                                |
+| `AUTH_RATE_LIMIT_WINDOW_MS`    | Authentication rate limit window.                                    |
+| `AUTH_RATE_LIMIT_MAX`          | Authentication request limit per window.                             |
+| `AI_RATE_LIMIT_WINDOW_MS`      | AI endpoint rate limit window.                                       |
+| `AI_RATE_LIMIT_MAX`            | AI request limit per window.                                         |
+| `SCHEDULER_ENABLED`            | Enables or disables scheduled jobs.                                  |
+| `DAILY_RECAP_CRON`             | Cron expression for daily recap checks.                              |
+| `GEMINI_API_KEY`               | Gemini API key used by backend services.                             |
+| `GEMINI_MODEL`                 | Gemini model name.                                                   |
+| `GEMINI_TEMPERATURE`           | Gemini response temperature.                                         |
+| `GEMINI_MAX_OUTPUT_TOKENS`     | Gemini response token limit.                                         |
+
+Local environment files are excluded from version control. Use `.env.example` as the committed configuration template.
+
+## Local Development
+
+Install dependencies:
+
+```powershell
+npm install
+```
+
+Generate the Prisma client:
+
+```powershell
+npm run prisma:generate
+```
+
+Validate the Prisma schema:
+
+```powershell
+npm run prisma:validate
+```
+
+Start the development server:
+
+```powershell
 npm run dev
 ```
 
-The API runs on `http://localhost:5000` by default.
+The API runs on:
 
-## Environment Variables
+```text
+http://localhost:5000
+```
 
-Create `.env` from `.env.example`. Do not commit `.env`.
+Health check:
 
-| Variable | Purpose |
-| --- | --- |
-| `NODE_ENV` | Runtime mode, usually `development`, `test`, or `production`. |
-| `PORT` | API port. Defaults to `5000`. |
-| `API_PREFIX` | API route prefix. Defaults to `/api`. |
-| `APP_TIME_ZONE` | App date boundary for today/check-in and habit log date checks. Defaults to `Asia/Jakarta`. |
-| `DATABASE_URL` | Required PostgreSQL connection string. Use the Supabase connection string for real persistence. |
-| `JWT_SECRET` | Long random secret for signing tokens. Required in production. |
-| `JWT_EXPIRES_IN` | Token lifetime, for example `7d`. |
-| `BCRYPT_SALT_ROUNDS` | Password hashing cost. Defaults to `10`. |
-| `JSON_BODY_LIMIT` | Maximum JSON request body size. Defaults to `100kb`. |
-| `CORS_ALLOWED_ORIGINS` | Comma-separated frontend origins such as `http://localhost:5173`. |
-| `CORS_ALLOW_CREDENTIALS` | Set to `true` only if browser credential requests are needed. |
-| `GENERAL_RATE_LIMIT_WINDOW_MS` | General API rate-limit window in milliseconds. |
-| `GENERAL_RATE_LIMIT_MAX` | Max general API requests per window. |
-| `AUTH_RATE_LIMIT_WINDOW_MS` | Auth route rate-limit window in milliseconds. |
-| `AUTH_RATE_LIMIT_MAX` | Max login/register attempts per window. |
-| `AI_RATE_LIMIT_WINDOW_MS` | AI route rate-limit window in milliseconds. |
-| `AI_RATE_LIMIT_MAX` | Max AI insight requests per window. |
-| `SCHEDULER_ENABLED` | Set to `false` to disable scheduled jobs. |
-| `DAILY_RECAP_CRON` | Cron expression for daily recap checks. Defaults to `0 21 * * *`. |
-| `GEMINI_API_KEY` | Gemini API key. If missing, the API returns safe fallback insights. |
-| `GEMINI_MODEL` | Gemini model name. Defaults to `gemini-2.0-flash`. |
-| `GEMINI_TEMPERATURE` | Gemini response creativity. Defaults to `0.3`. |
-| `GEMINI_MAX_OUTPUT_TOKENS` | Gemini output limit. Defaults to `220`. |
+```text
+GET http://localhost:5000/health
+```
 
-## Supabase and Prisma
+## Database and Prisma
 
-The Prisma schema is configured for PostgreSQL and includes a checked-in initial migration under `prisma/migrations`.
+The backend uses Prisma with PostgreSQL. The Prisma schema and migrations are located in:
 
-Prisma 7 stores the connection URL in `prisma.config.ts`, not inside `schema.prisma`. The project still uses `DATABASE_URL` as the single environment variable for the database connection.
+```text
+prisma/
+```
 
-For Supabase:
+Useful Prisma commands:
 
-1. Create a Supabase project.
-2. Copy the PostgreSQL connection string from Supabase.
-3. Put it in `.env` as `DATABASE_URL`.
-4. Run `npm run prisma:generate`.
-5. Run `npm run prisma:migrate:deploy` to apply checked-in migrations.
-
-If your direct Supabase URL on port `5432` is unreachable from your machine or host, use Supabase's pooled connection string for `DATABASE_URL`. The backend has been verified against Supabase once the URL is reachable.
-
-Useful commands:
-
-```bash
+```powershell
 npm run prisma:generate
 npm run prisma:validate
 npm run prisma:migrate
@@ -142,201 +163,163 @@ npm run prisma:migrate:deploy
 npm run prisma:studio
 ```
 
-Use `npm run prisma:migrate` during local development when creating new migrations. Use `npm run prisma:migrate:deploy` for Supabase, staging, or production-style environments.
+Use `npm run prisma:migrate` when creating new migrations during local development.
 
-## API Routes
+Use `npm run prisma:migrate:deploy` when applying existing checked-in migrations to a target database.
 
-Health and readiness:
+Prisma 7 uses `prisma.config.ts` for loading the database connection configuration. The project still uses `DATABASE_URL` as the environment variable for the PostgreSQL connection string.
 
-- `GET /health`
-- `GET /api`
+## API Overview
 
-Auth:
+Health:
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
+```text
+GET /health
+GET /api
+```
 
-Habits and logs:
+Authentication:
 
-- `GET /api/habits`
-- `POST /api/habits`
-- `GET /api/habits/:id`
-- `PUT /api/habits/:id`
-- `DELETE /api/habits/:id`
-- `GET /api/habit-logs`
-- `POST /api/habit-logs`
-- `POST /api/habit-logs/avoid`
-- `GET /api/habit-logs/:id`
-- `PUT /api/habit-logs/:id`
-- `DELETE /api/habit-logs/:id`
+```text
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/logout
+GET  /api/auth/me
+```
 
-Check-ins and weekly summaries:
+Habits:
 
-- `GET /api/checkins`
-- `POST /api/checkins`
-- `GET /api/checkins/:date`
-- `PUT /api/checkins/:id`
-- `GET /api/weekly-summary/current`
-- `GET /api/weekly-summary/:weekId`
-- `POST /api/weekly-summary/generate`
-- `POST /api/ai/insight/generate`
+```text
+GET    /api/habits
+POST   /api/habits
+GET    /api/habits/:id
+PUT    /api/habits/:id
+DELETE /api/habits/:id
+```
 
-Protected routes require:
+Habit logs:
+
+```text
+GET    /api/habit-logs
+POST   /api/habit-logs
+POST   /api/habit-logs/avoid
+GET    /api/habit-logs/:id
+PUT    /api/habit-logs/:id
+DELETE /api/habit-logs/:id
+```
+
+Check-ins:
+
+```text
+GET  /api/checkins
+POST /api/checkins
+GET  /api/checkins/:date
+PUT  /api/checkins/:id
+```
+
+Weekly summaries:
+
+```text
+GET  /api/weekly-summary/current
+GET  /api/weekly-summary/:weekId
+POST /api/weekly-summary/generate
+```
+
+AI insight:
+
+```text
+POST /api/ai/insight/generate
+```
+
+Protected endpoints require:
 
 ```text
 Authorization: Bearer <token>
 ```
 
-Successful API responses include `status: "success"` plus the route payload. Errors use `status: "error"` with a clear `message` and optional validation `details`.
+Successful responses use a consistent JSON response shape with `status: "success"`. Error responses use `status: "error"` with a message and optional validation details.
 
-`GET /api/habit-logs` supports optional `habitId`, `date`, `startDate`, and `endDate` query filters. Dates use `YYYY-MM-DD`.
+## Habit Log Behavior
 
-Same-day habit log replacement is enforced in the service layer for `userId + habitId + date`, so resubmitting a log updates the effective daily state instead of double-counting progress. A database-level unique constraint for this combination can be added later as a hardening improvement after safely cleaning any existing duplicates.
+Habit logs support date-based tracking for multiple habit types:
 
-## Gemini Insights
+* Checklist habits store completed or not-completed daily state.
+* Frequency habits store count-based progress.
+* Duration habits store minute-based progress.
+* Bad habits are recorded through the avoidance endpoint.
 
-Gemini is isolated in `src/services/aiInsightService.js`. The service asks for compact JSON with:
+Same-day habit log replacement is enforced at the service layer for `userId`, `habitId`, and `date`. Re-submitting a log for the same habit and date updates the effective daily state instead of double-counting progress.
 
-- `insightText`
-- `recommendationText`
+## Weekly Summary Behavior
 
-Responses are normalized and kept short for the frontend. If Gemini is not configured or the API call fails, the backend returns a deterministic fallback insight instead of failing the weekly summary flow.
+Weekly summaries are calculated from active habits, habit logs, and check-ins within the selected week.
 
-## Scheduler
+The current summary endpoint refreshes runtime progress data without automatically calling Gemini. AI text is generated or refreshed through the summary generation endpoint.
 
-The scheduler is started from `src/server.js` and currently runs the daily recap job. The daily recap job identifies users who have not submitted today's check-in and logs the candidate count.
+This keeps dashboard and summary progress up to date while preventing unnecessary AI API calls during normal page loads.
 
-Notification delivery is intentionally not implemented yet. Future email, push, or in-app notification delivery can be added inside `src/jobs/dailyRecapJob.js` without changing the API routes.
+## Gemini Integration
 
-Disable scheduled jobs locally or in tests with:
+Gemini integration is handled by the backend service layer. The frontend does not call Gemini directly.
+
+The AI service generates compact weekly insight and recommendation text based on habit progress and check-in context. If Gemini is not configured or the request fails, the backend returns a deterministic fallback response so the weekly summary flow remains available.
+
+## Scheduled Jobs
+
+The scheduler starts from `src/server.js` when enabled. The daily recap job checks for users who have not submitted a check-in for the current day.
+
+Scheduled jobs can be disabled with:
 
 ```env
 SCHEDULER_ENABLED=false
 ```
 
-## Tests
+## Security
 
-```bash
+The backend includes practical security controls for the API layer:
+
+* Password hashing with bcrypt
+* JWT authentication for protected routes
+* Token invalidation on logout through token versioning
+* User ownership checks in protected services
+* Request validation before service execution
+* Helmet security headers
+* Configurable CORS origins
+* General, authentication, and AI route rate limiting
+* Production error responses that avoid exposing internal details
+* Backend-owned AI credentials
+
+## Testing
+
+Run the backend test suite:
+
+```powershell
 npm test
 ```
 
-`npm test` runs unit and route tests without touching the database. Database integration tests are opt-in so they do not accidentally write to a shared Supabase database.
+Run Prisma validation:
 
-To verify real database persistence:
+```powershell
+npm run prisma:validate
+```
+
+Generate Prisma client:
+
+```powershell
+npm run prisma:generate
+```
+
+Database integration tests are opt-in so they do not run against a database unintentionally.
+
+PowerShell:
 
 ```powershell
 $env:RUN_DB_TESTS="true"
 npm run test:db
 ```
 
-On macOS/Linux:
+macOS/Linux:
 
 ```bash
 RUN_DB_TESTS=true npm run test:db
 ```
-
-The database tests create temporary users, habits, habit logs, daily check-ins, and weekly summaries, then clean them up.
-
-## Manual API Testing
-
-Use Thunder Client, Postman, or a similar tool. Set the base URL to your running backend, for example:
-
-```text
-http://localhost:5000
-```
-
-If your `.env` uses another `PORT`, use that port instead.
-
-1. Health check
-   `GET /health`
-
-2. Register
-   `POST /api/auth/register`
-
-   ```json
-   {
-     "name": "Test User",
-     "email": "test@example.com",
-     "password": "password123"
-   }
-   ```
-
-3. Login
-   `POST /api/auth/login`
-
-   ```json
-   {
-     "email": "test@example.com",
-     "password": "password123"
-   }
-   ```
-
-4. Copy the `token` from the login response.
-
-5. For protected requests, add:
-
-   ```text
-   Authorization: Bearer <token>
-   ```
-
-6. Current user
-   `GET /api/auth/me`
-
-7. Create habit
-   `POST /api/habits`
-
-   ```json
-   {
-     "name": "Study",
-     "type": "frequency",
-     "category": "good",
-     "weeklyTarget": 5
-   }
-   ```
-
-8. List habits
-   `GET /api/habits`
-
-9. Create habit log
-   `POST /api/habit-logs`
-
-   ```json
-   {
-     "habitId": "<habit-id>",
-     "date": "2026-05-13",
-     "amount": 1,
-     "note": "Completed one session"
-   }
-   ```
-
-10. Create daily check-in
-    `POST /api/checkins`
-
-    ```json
-    {
-      "date": "2026-05-13",
-      "mood": "good",
-      "energy": "medium",
-      "note": "Good progress today"
-    }
-    ```
-
-11. Generate weekly summary
-    `POST /api/weekly-summary/generate`
-
-    ```json
-    {
-      "weekDate": "2026-05-13"
-    }
-    ```
-
-12. Generate AI insight preview
-    `POST /api/ai/insight/generate`
-
-    ```json
-    {
-      "weekDate": "2026-05-13"
-    }
-    ```
