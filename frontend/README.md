@@ -1,113 +1,143 @@
 # Habit Flow Frontend
 
-Dark-mode responsive frontend for Habit Flow, a weekly consistency habit tracker.
+Frontend application for Habit Flow, a weekly habit tracking platform focused on progress, reflection, and AI-assisted habit insights.
 
-## Stack
+This application provides the user-facing experience for authentication, habit management, activity logging, daily check-ins, dashboard analytics, weekly summaries, and account settings.
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- ESLint
+## Tech Stack
 
-## Current Status
+* Next.js App Router
+* React
+* TypeScript
+* Tailwind CSS
+* ESLint
 
-The MVP frontend is feature-complete for final QA and deployment preparation. Authentication, habit management, daily habit logging, daily check-ins, weekly summaries, Gemini-backed insight display, and the dashboard usage preview connect to the backend API.
+## Application Overview
 
-Implemented:
+The frontend is built as a responsive dashboard application with protected routes and backend-driven data. It communicates with the Habit Flow API to manage user sessions, habits, logs, check-ins, and weekly summaries.
 
-- Landing page
-- Real login, register, logout, token storage, current user loading, and protected routes
-- Responsive app layout
-- Desktop sidebar navigation
-- Mobile bottom navigation
-- Dashboard daily usage preview using real habits, logs, and today's check-in where available
-- Habits list connected to `GET /api/habits`
-- Add habit form connected to `POST /api/habits`
-- Edit habit flow connected to `GET /api/habits/:id` and `PUT /api/habits/:id`
-- Delete habit action connected to `DELETE /api/habits/:id`
-- Log activity form connected to `GET /api/habits`, `POST /api/habit-logs`, and `POST /api/habit-logs/avoid`
-- Daily check-in form connected to `GET /api/checkins/:date`, `POST /api/checkins`, and `PUT /api/checkins/:id`
-- Weekly summary page connected to `GET /api/weekly-summary/current`, `GET /api/weekly-summary/:id`, and `POST /api/weekly-summary/generate`
-- Gemini insight and recommendation display through backend weekly summary responses
-- Settings page
-- Shared UI components and frontend TypeScript types
-- Refined dark-mode dashboard shell
-- Loading, empty, error, and success states
-- API client foundation using `NEXT_PUBLIC_API_BASE_URL`
+Core areas of the application include:
 
-Not implemented yet:
+* Public landing page
+* Login and registration flows
+* Protected dashboard layout
+* Habit list, creation, editing, and deletion
+* Activity logging for good habits and bad habit avoidance
+* Daily check-in interface
+* Weekly summary and AI insight display
+* Settings and account overview
+* Desktop sidebar navigation and mobile bottom navigation
 
-- Direct frontend Gemini calls, by design. Gemini remains backend-only.
-- Deployment configuration and production hosting
+## Routes
 
-## Run Locally
-
-From the `frontend` folder:
-
-```bash
-npm install
-npm run dev
+```text
+/
+├── /login
+├── /register
+├── /dashboard
+├── /habits
+├── /habits/new
+├── /habits/[id]/edit
+├── /logs/new
+├── /check-in
+├── /weekly-summary
+└── /settings
 ```
 
-On Windows PowerShell, if script execution blocks `npm`, use:
+## Project Structure
 
-```bash
-npm.cmd install
-npm.cmd run dev
+```text
+frontend/
+├── app/              # Next.js routes and page entry points
+├── components/       # Reusable UI and feature components
+├── lib/              # API client, auth helpers, date utilities, and progress logic
+├── public/           # Static assets
+├── types/            # Shared TypeScript types
+├── .env.example      # Environment variable template
+└── package.json
 ```
 
-Then open:
+## Configuration
 
-```bash
-http://localhost:3000
+Create a local environment file from the provided template:
+
+```powershell
+Copy-Item .env.example .env.local
 ```
 
-Set the backend URL with:
+Required variable:
 
-```bash
+```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
 ```
 
-For local development, copy `.env.example` to `.env.local`. Do not commit `.env.local` or any file containing real secrets.
+`NEXT_PUBLIC_API_BASE_URL` defines the backend API base URL used by the frontend.
 
-## Habit CRUD Testing
+Local environment files are intentionally excluded from version control. Use `.env.example` as the committed template for required configuration values.
 
-1. Start the backend on `http://localhost:5000`.
-2. Start this frontend and log in.
-3. Open `/habits`.
-4. Create a habit from `/habits/new`.
-5. Confirm it appears on `/habits`.
-6. Edit the habit from its card.
-7. Delete the habit from its card.
-8. Refresh `/habits` and confirm the backend data persists.
+## Getting Started
 
-## Daily Usage Testing
+Install dependencies:
 
-1. Start the backend on `http://localhost:5000`.
-2. Start this frontend and log in.
-3. Create a habit from `/habits/new` if the account has no habits.
-4. Open `/logs/new`, choose a real habit, and submit a log.
-5. Open `/check-in`, submit today's mood and energy, then submit again to confirm the existing check-in updates.
-6. Open `/dashboard` and confirm active habits, daily check-in status, and today/weekly log stats render without layout issues.
+```powershell
+npm install
+```
 
-## Weekly Summary Testing
+Start the development server:
 
-1. Start the backend on `http://localhost:5000`.
-2. Start this frontend and log in.
-3. Make sure the account has at least one habit, one habit log, and one daily check-in.
-4. Open `/weekly-summary`.
-5. Click `Generate summary`.
-6. Confirm ranking, progress, top habit, habits needing attention, Gemini insight, and recommendation render.
-7. Refresh `/weekly-summary` and confirm the generated summary reloads from the backend.
-8. Open `/dashboard` and confirm the weekly AI preview renders when available.
+```powershell
+npm run dev
+```
 
-## Notes For Next Parts
+The frontend runs on:
 
-The frontend is ready for final QA, deployment preparation, and production environment configuration.
+```text
+http://localhost:3000
+```
 
-## QA Commands
+The backend API should be running before testing authenticated or data-driven pages.
 
-```bash
+## Quality Checks
+
+Run linting:
+
+```powershell
 npm run lint
+```
+
+Create a production build:
+
+```powershell
 npm run build
 ```
+
+A successful build confirms that the application routes, TypeScript checks, and production compilation are valid.
+
+## Backend Integration
+
+The frontend is designed to work with the Habit Flow backend located in:
+
+```text
+../backend
+```
+
+Backend-powered features include:
+
+* Authentication and current-user loading
+* Habit CRUD operations
+* Habit log creation and updates
+* Bad habit avoidance recording
+* Daily check-in creation and updates
+* Weekly summary retrieval and generation
+* AI insight display from backend-generated summary responses
+
+AI provider credentials are handled by the backend. The frontend only receives generated weekly insight data through the API.
+
+## Implementation Notes
+
+* Protected routes redirect unauthenticated users to the login flow.
+* The dashboard uses backend data from habits, logs, check-ins, and weekly summaries.
+* Weekly progress is based on average progress across active habits.
+* Activity logs and check-ins support past dates while blocking future dates.
+* Bad habits are recorded through avoidance actions.
+* The interface is responsive across desktop, tablet, and mobile layouts.
