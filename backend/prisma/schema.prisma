@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum HabitType {
+  checklist
+  frequency
+  duration
+}
+
+enum HabitCategory {
+  good
+  bad
+}
+
+enum EnergyLevel {
+  low
+  medium
+  high
+}
+
+enum WeeklySummaryStatus {
+  preview
+  generated
+}
+
+model User {
+  id              String          @id @default(uuid()) @db.Uuid
+  name            String
+  email           String          @unique
+  passwordHash    String
+  tokenVersion    Int             @default(0)
+  habits          Habit[]
+  habitLogs       HabitLog[]
+  dailyCheckins   DailyCheckin[]
+  weeklySummaries WeeklySummary[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@map("users")
+}
+
+model Habit {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  type         HabitType
+  category     HabitCategory
+  weeklyTarget Int
+  isActive     Boolean       @default(true)
+  logs         HabitLog[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([userId, isActive])
+  @@map("habits")
+}
+
+model HabitLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habitId   String   @db.Uuid
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  date      DateTime
+  amount    Int
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([habitId])
+  @@index([userId, date])
+  @@index([userId, habitId, date])
+  @@map("habit_logs")
+}
+
+model DailyCheckin {
+  id        String      @id @default(uuid()) @db.Uuid
+  userId    String      @db.Uuid
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime
+  mood      String
+  energy    EnergyLevel
+  note      String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId])
+  @@map("daily_checkins")
+}
+
+model WeeklySummary {
+  id                     String              @id @default(uuid()) @db.Uuid
+  userId                 String              @db.Uuid
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStartDate          DateTime
+  weekEndDate            DateTime
+  rankingData            Json
+  progressData           Json
+  topHabit               Json?
+  habitsNeedingAttention Json
+  insightText            String?
+  recommendationText     String?
+  status                 WeeklySummaryStatus @default(generated)
+  generatedAt            DateTime            @default(now())
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+
+  @@unique([userId, weekStartDate])
+  @@index([userId])
+  @@index([userId, weekStartDate])
+  @@map("weekly_summaries")
+}

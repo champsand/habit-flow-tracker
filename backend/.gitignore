@@ -1,0 +1,36 @@
+﻿# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs and local runtime output
+/logs/
+*.log
+npm-debug.log*
+
+# Build, coverage, and temporary files
+.next/
+dist/
+build/
+coverage/
+.turbo/
+.cache/
+.tmp/
+tmp/
+temp/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local archives
+*.zip
+*.rar
+*.tar
+*.tar.gz
+*.7z
